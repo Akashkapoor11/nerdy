@@ -44,7 +44,7 @@ After every answer, the engine updates using the standard BKT update equations:
 │  └── localStorage for session persistence               │
 ├─────────────────────────────────────────────────────────┤
 │  Backend (Node.js/Express)                              │
-│  ├── AI routes → Groq (qwen/qwen3.8-27b)               │
+│  ├── AI routes → Groq (qwen/qwen3.8-27b)                │
 │  ├── Fallback: OpenRouter / OpenAI (priority order)     │
 │  └── SQLite (node:sqlite) for cross-session persistence │
 └─────────────────────────────────────────────────────────┘
