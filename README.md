@@ -1,10 +1,5 @@
 # MathQuest - AI-Adaptive Math Learning for K-5
 
-> **Built for the Nerdy AI Hackathon Challenge** · Prompt 01: K–5 Math Game  
-> **Tech:** React · Node.js · BKT Adaptive Engine · Groq AI
-
----
-
 ##  What It Is
 
 MathQuest is an AI-powered gamified math learning platform for **Kindergarten to Grade 5 students** (ages 5–11). It combines a **Bayesian Knowledge Tracing (BKT)** adaptive engine with a **Context-Aware AI Copilot (Max)** powered by Groq (Qwen 3.8B), delivering genuine personalised tutoring — not just flashcards.
