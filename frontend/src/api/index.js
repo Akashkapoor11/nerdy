@@ -109,8 +109,30 @@ export const Progress = {
 
 // ── Auth endpoints ──────────────────────────────────────────────────────────────
 export const Auth = {
-  login: (username, password) => post('/auth/login', { username, password }),
-  register: (username, password, name, grade, avatar) => post('/auth/register', { username, password, name, grade, avatar }),
+  login: async (username, password) => {
+    try {
+      const res = await fetch(`${BASE}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      return await res.json();
+    } catch (e) {
+      return { error: 'Network error. Backend might be offline.' };
+    }
+  },
+  register: async (username, password, name, grade, avatar) => {
+    try {
+      const res = await fetch(`${BASE}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password, name, grade, avatar })
+      });
+      return await res.json();
+    } catch (e) {
+      return { error: 'Network error. Backend might be offline.' };
+    }
+  },
 };
 
 // ── Health check ──────────────────────────────────────────────────────────────
