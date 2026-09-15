@@ -13,7 +13,7 @@ const PORT = process.env.PORT || 3001;
 
 // ─── Middleware ────────────────────────────────────────────────────────────────
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: true, // Dynamically allow any origin (perfect for hackathon sharing)
   credentials: true,
 }));
 
@@ -52,9 +52,9 @@ app.get(['/health', '/api/health'], (req, res) => {
       provider: aiProvider || 'none',
       enabled: !!aiProvider,
       model: aiProvider === 'nvidia' ? 'meta/llama-3.1-8b-instruct'
-           : aiProvider === 'openai' ? 'gpt-4o-mini'
-           : aiProvider === 'groq'   ? 'qwen/qwen3.8-27b'
-           : aiProvider === 'openrouter' ? (process.env.OPENROUTER_MODEL || 'deepseek/deepseek-r1:free')
+        : aiProvider === 'openai' ? 'gpt-4o-mini'
+          : aiProvider === 'groq' ? 'qwen/qwen3.8-27b'
+            : aiProvider === 'openrouter' ? (process.env.OPENROUTER_MODEL || 'deepseek/deepseek-r1:free')
               : null,
     },
   });
@@ -77,10 +77,10 @@ app.listen(PORT, () => {
   const aiStatus = process.env.NVIDIA_API_KEY
     ? '✅ NVIDIA NIM Connected (meta/llama-3.1-8b-instruct)'
     : process.env.OPENAI_API_KEY
-    ? '✅ OpenAI Connected (gpt-4o-mini)'
-    : process.env.GROQ_API_KEY
-    ? '✅ Groq Connected (qwen/qwen3.8-27b) — FREE'
-    : process.env.OPENROUTER_API_KEY
+      ? '✅ OpenAI Connected (gpt-4o-mini)'
+      : process.env.GROQ_API_KEY
+        ? '✅ Groq Connected (qwen/qwen3.8-27b) — FREE'
+        : process.env.OPENROUTER_API_KEY
           ? `✅ OpenRouter Connected (${process.env.OPENROUTER_MODEL || 'deepseek/deepseek-r1:free'})`
           : '⚠️  Not configured (AI hints disabled)';
   console.log(`🔑 AI: ${aiStatus}`);
