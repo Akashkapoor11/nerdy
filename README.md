@@ -1,31 +1,30 @@
 # MathQuest ✨ — AI-Adaptive Math Learning for K-5
 
 > **Built for the Nerdy AI Hackathon Challenge** · Prompt 01: K–5 Math Game  
-> **Tech:** React · Node.js · BKT Adaptive Engine · OpenRouter AI
+> **Tech:** React · Node.js · BKT Adaptive Engine · Groq AI
 
 ---
 
 ## 🎯 What It Is
 
-MathQuest is an AI-powered gamified math learning platform for **Kindergarten to Grade 5 students** (ages 5–11). It combines a **Bayesian Knowledge Tracing (BKT)** adaptive engine with a **7-point AI coaching layer** powered by OpenRouter/Llama-3.1, delivering genuine personalised tutoring — not just flashcards.
+MathQuest is an AI-powered gamified math learning platform for **Kindergarten to Grade 5 students** (ages 5–11). It combines a **Bayesian Knowledge Tracing (BKT)** adaptive engine with a **Context-Aware AI Copilot (Max)** powered by Groq (Qwen 3.8B), delivering genuine personalised tutoring — not just flashcards.
 
 **⚡ [Try Demo Instantly](http://localhost:5173)** — click "⚡ Try Demo Instantly" on the welcome screen.
 
 ---
 
-## 🤖 7 AI Integration Points
+## 🤖 AI Integration Points
 
 | Feature | When | What happens |
 |---|---|---|
-| 💬 **Ask Max Chat** | Always (floating panel) | Child asks any math question, Max responds with grade + topic awareness |
-| 📖 **AI Word Problems** | Every question | AI wraps arithmetic in a story ("Emma has 3 apples...") |
-| 💡 **AI Hints** | Before answering | Guided hint without revealing the answer |
-| ✨ **AI Explanations** | After wrong answers | Max explains why the answer is correct, in child-friendly language |
-| 🎉 **Session Summaries** | Results page | Personalised encouragement based on accuracy, weak topics, streak |
+| 💬 **Context-Aware Copilot (Max)** | Always (floating panel) | Max reads the student's screen (Score, Question, UI Options) and provides Socratic hints without revealing answers. Features full Chat Memory. |
+| 📖 **Procedural Word Problems** | Every question | AI wraps arithmetic in a story ("Emma has 3 apples...") |
+| 💡 **AI Hints** | Before answering | Guided hint perfectly targeted to the child's grade level |
+| ✨ **AI Explanations** | After wrong answers | Max explains why the answer is correct |
+| 🎉 **Session Summaries** | Results page | Personalised encouragement based on accuracy and weak topics |
 | 🧠 **Dashboard Insights** | Dashboard | AI study recommendation from the student's mastery matrix |
-| 🔊 **Voice/TTS** | All questions | Auto-reads for K-1; manual 🔊 button for all grades (Web Speech API) |
 
-> AI falls back gracefully to built-in responses if the backend is offline — the core experience never breaks.
+> **Zero-Downtime Architecture:** AI falls back gracefully to secondary models (OpenRouter) or built-in responses if the primary Groq backend is offline — the core learning experience never breaks.
 
 ---
 
@@ -38,14 +37,6 @@ After every answer, the engine updates using the standard BKT update equations:
 - **Wrong answer**: P(mastery) decreases, weighted by P(G) (guess probability) and P(S) (slip probability)
 - **Next question selection**: Targets the skill with highest learning opportunity for current mastery state
 
-Additionally, **6 misconception types** are detected and labelled:
-- `addition_instead_of_multiplication`
-- `reversed_subtraction`
-- `off_by_one_factor`
-- `counting_error`
-- `place_value_error`
-- `subtraction_instead_of_division`
-
 ---
 
 ## 🏗️ Architecture
@@ -54,20 +45,20 @@ Additionally, **6 misconception types** are detected and labelled:
 ┌─────────────────────────────────────────────────────────┐
 │  Frontend (React + Zustand + Framer Motion)             │
 │  ├── BKT Engine (client-side, works offline)            │
-│  ├── 7 AI hooks → Backend API                           │
+│  ├── Context-Injection Layer → Page State to LLM        │
 │  └── localStorage for session persistence               │
 ├─────────────────────────────────────────────────────────┤
 │  Backend (Node.js/Express)                              │
-│  ├── AI routes → OpenRouter (Llama-3.1-8b-instruct)    │
-│  ├── Fallback: Groq → OpenAI (priority order)           │
-│  └── SQLite (node:sqlite) for cross-session persistence  │
+│  ├── AI routes → Groq (qwen/qwen3.8-27b)               │
+│  ├── Fallback: OpenRouter / OpenAI (priority order)     │
+│  └── SQLite (node:sqlite) for cross-session persistence │
 └─────────────────────────────────────────────────────────┘
 ```
 
 **Stack:**
 - Frontend: React 18, Zustand, Framer Motion, Recharts, canvas-confetti
 - Backend: Node.js, Express, node:sqlite, dotenv, express-rate-limit
-- AI: OpenRouter API via openai SDK (`baseURL` override)
+- AI: Groq API (`qwen/qwen3.8-27b`) with advanced prompt-engineering for Vision-Bypass context injection.
 
 ---
 
@@ -76,9 +67,9 @@ Additionally, **6 misconception types** are detected and labelled:
 ```bash
 # 1. Backend
 cd backend
-cp .env.example .env          # Add your OPENROUTER_API_KEY
+cp .env.example .env          # Add your GROQ_API_KEY
 npm install
-npm run dev                   # Starts on http://localhost:3001
+npm run dev                   # Starts on http://localhost:3001 (auto-reloads)
 
 # 2. Frontend (new terminal)
 cd frontend
