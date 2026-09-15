@@ -4,6 +4,9 @@
   "description": "MathQuest adaptive learning backend",
   "type": "module",
   "main": "src/app.js",
+  "engines": {
+    "node": ">=22.5.0"
+  },
   "scripts": {
     "dev": "nodemon src/app.js",
     "start": "node src/app.js"
