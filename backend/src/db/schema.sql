@@ -3,6 +3,8 @@
 
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
+  username TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
   name TEXT NOT NULL,
   grade INTEGER NOT NULL CHECK(grade BETWEEN 0 AND 5),
   avatar TEXT DEFAULT 'wizard',

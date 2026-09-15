@@ -7,7 +7,7 @@ import {
 } from '../utils/adaptiveEngine.js';
 import { generateQuestion } from '../utils/questionBank.js';
 import { calculateXP, computeLevel, checkNewBadges, loadEarnedBadges, saveEarnedBadges, BADGES } from '../utils/badges.js';
-import { AI } from '../api/index.js';
+import { Auth, AI, Progress } from '../api/index.js';
 
 const PROFILE_KEY = 'mathquest_profile';
 const SESSION_KEY = 'mathquest_sessions';
@@ -23,16 +23,65 @@ const useGameStore = create((set, get) => ({
   earnedBadges: loadEarnedBadges(),
   sessions:     load(SESSION_KEY, []),
 
-  createProfile: (name, grade, avatar = 'wizard') => {
-    const profile = {
-      id: `user_${Date.now()}`, name, grade: parseInt(grade), avatar,
-      xp: 0, level: 1, totalAnswers: 0, totalCorrect: 0,
-      streakDays: 1, fastAnswers: 0, topicsEverAttempted: [],
-      createdAt: new Date().toISOString(), lastPlayedAt: null,
-    };
-    const skillState = initSkillState();
-    save(PROFILE_KEY, profile); saveSkillState(skillState);
-    set({ profile, skillState, earnedBadges: [], sessions: [] });
+  createProfile: async (username, password, name, grade, avatar = 'wizard') => {
+    try {
+      const res = await Auth.register(username, password, name, grade, avatar);
+      if (res.error) throw new Error(res.error);
+      const profile = {
+        id: res.user.id, username, name, grade: parseInt(grade), avatar,
+        xp: 0, level: 1, totalAnswers: 0, totalCorrect: 0,
+        streakDays: 1, fastAnswers: 0, topicsEverAttempted: [],
+        createdAt: new Date().toISOString(), lastPlayedAt: null,
+      };
+      const skillState = initSkillState();
+      save(PROFILE_KEY, profile); saveSkillState(skillState);
+      set({ profile, skillState, earnedBadges: [], sessions: [] });
+      return { success: true };
+    } catch (e) {
+      return { error: e.message || 'Registration failed' };
+    }
+  },
+
+  loginProfile: async (username, password) => {
+    try {
+      const res = await Auth.login(username, password);
+      if (res.error) throw new Error(res.error);
+      const dash = await Progress.getDashboard(res.user.id);
+      
+      const user = dash.user;
+      const profile = {
+        id: user.id, username, name: user.name, grade: user.grade, avatar: user.avatar,
+        xp: user.xp, level: user.level, totalAnswers: user.total_answers, totalCorrect: user.total_correct,
+        streakDays: user.streak_days, fastAnswers: user.fast_answers, 
+        topicsEverAttempted: JSON.parse(user.topics_ever_attempted || '[]'),
+        createdAt: user.created_at, lastPlayedAt: user.last_played_at,
+      };
+
+      const skillState = initSkillState();
+      if (dash.rawSkills) {
+        for (const r of dash.rawSkills) {
+          skillState[`${r.topic}_${r.difficulty}`] = {
+            p_know: r.p_know, attempts: r.attempts, correct: r.correct, streak: r.streak, last_seen: r.last_seen
+          };
+        }
+      }
+
+      const earnedBadges = (dash.badges || []).filter(b => b.earned).map(b => ({ id: b.id, earnedAt: b.earnedAt }));
+      
+      const sessions = dash.recentSessions.map(s => ({
+        id: s.id, startedAt: new Date(s.started_at).getTime(), endedAt: s.ended_at ? new Date(s.ended_at).getTime() : null,
+        correct: s.correct_count, total: s.questions_answered, xpEarned: s.xp_earned,
+        durationMs: s.duration_ms, topicsCovered: JSON.parse(s.topics_covered || '[]')
+      }));
+
+      save(PROFILE_KEY, profile); saveSkillState(skillState);
+      saveEarnedBadges(earnedBadges); save(SESSION_KEY, sessions);
+      
+      set({ profile, skillState, earnedBadges, sessions });
+      return { success: true };
+    } catch (e) {
+      return { error: e.message || 'Login failed' };
+    }
   },
 
   updateDailyStreak: () => {
@@ -169,6 +218,9 @@ const useGameStore = create((set, get) => ({
 
     set({ skillState:newSkillState, profile:updatedProfile, earnedBadges:allBadges, currentSession:updatedSession, sessionHistory:newHistory, pendingBadges:newBadges, sessionStreak:newStreak, remediationTarget });
 
+    // Sync to cloud
+    Progress.sync(profile.id, newSkillState, [updatedSession]).catch(console.error);
+
     return { isCorrect, xpEarned, levelInfo, didLevelUp, newBadges, sessionStreak:newStreak, timeTakenMs, misconception };
   },
 
@@ -182,6 +234,11 @@ const useGameStore = create((set, get) => ({
     const newSessions = [session, ...sessions].slice(0, 50);
     save(SESSION_KEY, newSessions);
     set({ sessions:newSessions, currentSession:null, sessionHistory:[], sessionStarted:false, remediationTarget:null, sessionStreak:0 });
+    
+    // Sync to cloud
+    const { profile, skillState } = get();
+    if (profile) Progress.sync(profile.id, skillState, [session]).catch(console.error);
+    
     return session;
   },
 

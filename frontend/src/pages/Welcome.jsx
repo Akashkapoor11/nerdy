@@ -24,22 +24,47 @@ const STEP_ORDER = ['name', 'grade', 'avatar'];
 
 export default function Welcome() {
   const navigate = useNavigate();
-  const { profile, createProfile, resetProfile } = useGameStore();
-  const [step, setStep]         = useState(profile ? 'returning' : 'name');
+  const [step, setStep]         = useState(profile ? 'returning' : 'auth'); // auth, name, grade, avatar, login
+  const [authMode, setAuthMode] = useState('register'); // register or login
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [name, setName]         = useState('');
   const [grade, setGrade]       = useState(null);
   const [avatar, setAvatar]     = useState('wizard');
-  const [nameError, setNameError] = useState('');
+  const [error, setError]       = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleNameNext = () => {
-    if (!name.trim() || name.trim().length < 2) { setNameError('Please enter at least 2 characters!'); return; }
-    setNameError('');
-    setStep('grade');
+  const handleAuthNext = async () => {
+    if (authMode === 'login') {
+      if (!username || !password) return setError('Username and password required');
+      setIsSubmitting(true);
+      const res = await useGameStore.getState().loginProfile(username, password);
+      setIsSubmitting(false);
+      if (res.success) {
+        navigate('/game');
+      } else {
+        setError(res.error);
+      }
+    } else {
+      if (!username || !password || !name) return setError('All fields required');
+      if (name.trim().length < 2) return setError('Name must be at least 2 characters');
+      if (username.trim().length < 3) return setError('Username must be at least 3 characters');
+      if (password.length < 6) return setError('Password must be at least 6 characters');
+      setError('');
+      setStep('grade');
+    }
   };
 
-  const handleStart = () => {
-    createProfile(name.trim(), grade, avatar);
-    navigate('/game');
+  const handleStart = async () => {
+    setIsSubmitting(true);
+    const res = await createProfile(username, password, name.trim(), grade, avatar);
+    setIsSubmitting(false);
+    if (res.success) {
+      navigate('/game');
+    } else {
+      setError(res.error);
+      setStep('auth');
+    }
   };
 
   // Demo Mode — judges can try all features instantly
@@ -63,8 +88,8 @@ export default function Welcome() {
             <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={() => navigate('/game')} className="btn-primary w-full text-xl py-4">🚀 Continue Learning!</motion.button>
             <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={() => navigate('/dashboard')} className="btn-secondary w-full">📊 My Dashboard</motion.button>
             <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={() => navigate('/achievements')} className="btn-secondary w-full">🏆 Achievements</motion.button>
-            <button onClick={() => { resetProfile(); setStep('name'); setName(''); setGrade(null); }}
-              className="text-violet-500 hover:text-violet-400 text-sm mt-2 transition-colors">Switch Player</button>
+            <button onClick={() => { resetProfile(); setStep('auth'); setName(''); setGrade(null); setUsername(''); setPassword(''); }}
+              className="text-violet-500 hover:text-violet-400 text-sm mt-2 transition-colors">Sign out</button>
           </div>
         </motion.div>
       </div>
@@ -96,18 +121,36 @@ export default function Welcome() {
       </motion.div>
 
       <AnimatePresence mode="wait">
-        {step === 'name' && (
-          <motion.div key="name" initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }}
+        {step === 'auth' && (
+          <motion.div key="auth" initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }}
             className="glass-card p-8 max-w-sm w-full">
-            <h2 className="font-display text-2xl text-white mb-6 text-center">What's your name? 👋</h2>
-            <input autoFocus value={name} onChange={e => { setName(e.target.value); setNameError(''); }}
-              onKeyDown={e => e.key === 'Enter' && handleNameNext()}
-              placeholder="Enter your name..." maxLength={20}
-              className="w-full bg-space-800 border-2 border-violet-600/40 focus:border-violet-400 rounded-2xl px-5 py-4
-                text-white text-xl font-bold placeholder-violet-700 outline-none transition-all duration-200 mb-3" />
-            {nameError && <p className="text-coral-400 text-sm mb-3">⚠️ {nameError}</p>}
-            <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={handleNameNext}
-              disabled={!name.trim()} className="btn-primary w-full text-lg disabled:opacity-40">Next →</motion.button>
+            <h2 className="font-display text-2xl text-white mb-6 text-center">{authMode === 'login' ? 'Welcome Back!' : 'Create Account'}</h2>
+            
+            <input autoFocus value={username} onChange={e => { setUsername(e.target.value); setError(''); }}
+              placeholder="Username"
+              className="w-full bg-space-800 border-2 border-violet-600/40 focus:border-violet-400 rounded-2xl px-5 py-3 text-white font-bold placeholder-violet-700 outline-none transition-all duration-200 mb-3" />
+            
+            <input type="password" value={password} onChange={e => { setPassword(e.target.value); setError(''); }}
+              onKeyDown={e => e.key === 'Enter' && authMode === 'login' && handleAuthNext()}
+              placeholder="Password"
+              className="w-full bg-space-800 border-2 border-violet-600/40 focus:border-violet-400 rounded-2xl px-5 py-3 text-white font-bold placeholder-violet-700 outline-none transition-all duration-200 mb-3" />
+            
+            {authMode === 'register' && (
+              <input value={name} onChange={e => { setName(e.target.value); setError(''); }}
+                onKeyDown={e => e.key === 'Enter' && handleAuthNext()}
+                placeholder="Display Name (e.g. Max)" maxLength={20}
+                className="w-full bg-space-800 border-2 border-violet-600/40 focus:border-violet-400 rounded-2xl px-5 py-3 text-white font-bold placeholder-violet-700 outline-none transition-all duration-200 mb-3" />
+            )}
+
+            {error && <p className="text-coral-400 text-sm mb-3 text-center">⚠️ {error}</p>}
+            
+            <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={handleAuthNext} disabled={isSubmitting}
+              className="btn-primary w-full text-lg disabled:opacity-40">{isSubmitting ? 'Loading...' : (authMode === 'login' ? 'Sign In' : 'Next →')}</motion.button>
+              
+            <button onClick={() => { setAuthMode(authMode === 'login' ? 'register' : 'login'); setError(''); }}
+              className="w-full text-violet-400 text-sm mt-4 hover:text-white transition-colors">
+              {authMode === 'login' ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
+            </button>
           </motion.div>
         )}
 
@@ -132,7 +175,7 @@ export default function Welcome() {
               ))}
             </div>
             <div className="flex gap-3">
-              <button onClick={() => setStep('name')} className="btn-secondary flex-1">← Back</button>
+              <button onClick={() => setStep('auth')} className="btn-secondary flex-1">← Back</button>
               <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={() => grade !== null && setStep('avatar')}
                 disabled={grade === null} className="btn-primary flex-1 disabled:opacity-40">Next →</motion.button>
             </div>
@@ -158,8 +201,8 @@ export default function Welcome() {
               ))}
             </div>
             <div className="flex gap-3">
-              <button onClick={() => setStep('grade')} className="btn-secondary flex-1">← Back</button>
-              <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={handleStart} className="btn-primary flex-1 text-lg">🚀 Start Quest!</motion.button>
+              <button onClick={() => setStep('grade')} className="btn-secondary flex-1" disabled={isSubmitting}>← Back</button>
+              <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={handleStart} disabled={isSubmitting} className="btn-primary flex-1 text-lg">{isSubmitting ? '...' : '🚀 Start!'}</motion.button>
             </div>
           </motion.div>
         )}

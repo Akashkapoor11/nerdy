@@ -5,16 +5,17 @@ import { getTopicsForGrade } from '../services/adaptive.js';
 
 const router = Router();
 
-router.post('/profile', (req, res) => {
+import bcrypt from 'bcryptjs';
+
+router.post('/register', async (req, res) => {
   try {
-    const { name, avatar = 'wizard' } = req.body;
-    // FIXED: use explicit undefined check so grade 0 (Kindergarten) is accepted
-    const grade = req.body.grade;
-    if (!name || grade === undefined || grade === null) {
-      return res.status(400).json({ error: 'name and grade are required' });
+    const { username, password, name, grade, avatar = 'wizard' } = req.body;
+    
+    if (!username || !password || !name || grade === undefined || grade === null) {
+      return res.status(400).json({ error: 'username, password, name, and grade are required' });
     }
+    
     const gradeInt = parseInt(grade, 10);
-    // FIXED: 0-5 range (0 = Kindergarten)
     if (isNaN(gradeInt) || gradeInt < 0 || gradeInt > 5) {
       return res.status(400).json({ error: 'grade must be 0 (Kindergarten) through 5' });
     }
@@ -22,9 +23,25 @@ router.post('/profile', (req, res) => {
       return res.status(400).json({ error: 'name must be 1–30 characters' });
     }
 
-    const id  = uuid();
+    // Check if username exists
+    const existing = userQueries.findByUsername.get(username);
+    if (existing) {
+      return res.status(400).json({ error: 'Username already taken' });
+    }
+
+    const password_hash = await bcrypt.hash(password, 10);
+    const id = uuid();
     const now = new Date().toISOString();
-    userQueries.create.run({ id, name: name.trim(), grade: gradeInt, avatar, last_played_at: now });
+
+    userQueries.create.run({ 
+      id, 
+      username: username.trim().toLowerCase(), 
+      password_hash, 
+      name: name.trim(), 
+      grade: gradeInt, 
+      avatar, 
+      last_played_at: now 
+    });
 
     // Initialise all skill nodes for this grade
     const topics = getTopicsForGrade(gradeInt);
@@ -38,10 +55,36 @@ router.post('/profile', (req, res) => {
     initSkills();
 
     const user = userQueries.findById.get(id);
+    delete user.password_hash;
     res.status(201).json({ user, token: id });
   } catch (err) {
-    console.error('Profile creation error:', err);
+    console.error('Registration error:', err);
     res.status(500).json({ error: 'Failed to create profile' });
+  }
+});
+
+router.post('/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    if (!username || !password) {
+      return res.status(400).json({ error: 'username and password are required' });
+    }
+
+    const user = userQueries.findByUsername.get(username.trim().toLowerCase());
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid username or password' });
+    }
+
+    const isValid = await bcrypt.compare(password, user.password_hash);
+    if (!isValid) {
+      return res.status(401).json({ error: 'Invalid username or password' });
+    }
+
+    delete user.password_hash;
+    res.json({ user, token: user.id });
+  } catch (err) {
+    console.error('Login error:', err);
+    res.status(500).json({ error: 'Failed to login' });
   }
 });
 

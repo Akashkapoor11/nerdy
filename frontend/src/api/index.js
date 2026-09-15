@@ -107,9 +107,15 @@ export const Progress = {
     get(`/progress/dashboard/${userId}`),
 };
 
+// ── Auth endpoints ──────────────────────────────────────────────────────────────
+export const Auth = {
+  login: (username, password) => post('/auth/login', { username, password }),
+  register: (username, password, name, grade, avatar) => post('/auth/register', { username, password, name, grade, avatar }),
+};
+
 // ── Health check ──────────────────────────────────────────────────────────────
 export const Health = {
   check: () => get('/health').then(d => !!d?.status),
 };
 
-export default { AI, Progress, Health };
+export default { Auth, AI, Progress, Health };

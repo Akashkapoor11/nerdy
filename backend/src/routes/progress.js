@@ -5,6 +5,66 @@ import { computeLevel, BADGE_DEFINITIONS } from '../services/badges.js';
 
 const router = Router();
 
+// Sync local progress to backend
+router.post('/sync', (req, res) => {
+  try {
+    const { userId, skillState, sessions } = req.body;
+    if (!userId) return res.status(400).json({ error: 'userId required' });
+
+    // Ensure the user exists
+    const user = userQueries.findById.get(userId);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    db.transaction(() => {
+      // 1. Sync skill state
+      if (skillState) {
+        for (const key of Object.keys(skillState)) {
+          const [topic, diffStr] = key.split('_');
+          const difficulty = parseInt(diffStr, 10);
+          const skill = skillState[key];
+          skillQueries.upsert.run({
+            user_id: userId,
+            topic,
+            difficulty,
+            p_know: skill.p_know,
+            attempts: skill.attempts,
+            correct: skill.correct,
+            streak: skill.streak,
+            last_seen: skill.last_seen || null
+          });
+        }
+      }
+
+      // 2. Sync sessions (only insert ones that don't exist)
+      if (sessions && sessions.length > 0) {
+        for (const session of sessions) {
+          const existing = sessionQueries.getById.get(session.id);
+          if (!existing) {
+            sessionQueries.create.run({
+              id: session.id,
+              user_id: userId,
+              started_at: new Date(session.startedAt).toISOString()
+            });
+            sessionQueries.end.run({
+              id: session.id,
+              ended_at: session.endedAt ? new Date(session.endedAt).toISOString() : new Date().toISOString(),
+              questions_answered: session.total || 0,
+              correct_count: session.correct || 0,
+              xp_earned: session.xpEarned || 0,
+              topics_covered: JSON.stringify(session.topicsCovered || [])
+            });
+          }
+        }
+      }
+    })();
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Sync error:', err);
+    res.status(500).json({ error: 'Failed to sync progress' });
+  }
+});
+
 // Full dashboard data for a user
 router.get('/dashboard/:userId', (req, res) => {
   try {
@@ -66,6 +126,7 @@ router.get('/dashboard/:userId', (req, res) => {
       topicMastery,
       weakSkills,
       skillHeatmap,
+      rawSkills: skillRows,
       topicStats: topicStatsMap,
       sessionChart,
       badges: allBadges,

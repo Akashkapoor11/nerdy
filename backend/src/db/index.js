@@ -92,11 +92,13 @@ export default { prepare, transaction, exec: (s) => db.exec(s) };
 // ─── User Queries ────────────────────────────────────────────
 export const userQueries = {
   create: prepare(`
-    INSERT INTO users (id, name, grade, avatar, xp, level, streak_days, last_played_at)
-    VALUES (@id, @name, @grade, @avatar, 0, 1, 0, @last_played_at)
+    INSERT INTO users (id, username, password_hash, name, grade, avatar, xp, level, streak_days, last_played_at)
+    VALUES (@id, @username, @password_hash, @name, @grade, @avatar, 0, 1, 0, @last_played_at)
   `),
 
   findById: prepare(`SELECT * FROM users WHERE id = ?`),
+  
+  findByUsername: prepare(`SELECT * FROM users WHERE username = ?`),
 
   updateXP: prepare(`
     UPDATE users SET xp = @xp, level = @level, last_played_at = @last_played_at WHERE id = @id
