@@ -72,7 +72,9 @@ npm install
 npm run dev                   # Starts on http://localhost:5173
 ```
 
-Open **http://localhost:5173** → click ** Try Demo Instantly** to see all features immediately.
+**Frontend runs on `http://localhost:5173`** | **Backend runs on `http://localhost:3001`**
+
+Open **http://localhost:5173** → click **⚡ Try Demo Instantly** to see all features immediately.
 
 ### Get a free API key
 1. Go to https://console.groq.com
