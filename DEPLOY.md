@@ -12,10 +12,8 @@ cd frontend && npm install && npm run dev
 ```bash
 # 1. Start backend
 cd backend && cp .env.example .env
-# Edit .env and add your AI key (choose one):
-# OPENAI_API_KEY=sk-...          (OpenAI)
+# Edit .env and add your AI key:
 # GROQ_API_KEY=gsk_...           (Groq — free)
-# OPENROUTER_API_KEY=sk-or-v1-.. (OpenRouter — free tier available)
 npm install && npm run dev &
 
 # 2. Start frontend
@@ -34,7 +32,7 @@ cd frontend && npm install && npm run dev
 1. Push to GitHub
 2. Go to render.com → New Web Service → Connect repo
 3. Root: `backend` | Build: `npm install` | Start: `node src/app.js`
-4. Add env vars: `OPENAI_API_KEY` (or `GROQ_API_KEY` or `OPENROUTER_API_KEY`), `NODE_ENV=production`, `FRONTEND_URL=<your-vercel-url>`
+4. Add env vars: `GROQ_API_KEY`, `NODE_ENV=production`, `FRONTEND_URL=<your-vercel-url>`
 5. Note your Render URL: `https://mathquest-backend.onrender.com`
 
 ### Step 2 — Deploy frontend to Vercel
@@ -52,10 +50,7 @@ cd frontend && npm install && npm run dev
 
 | Variable | Where | Required | Description |
 |---|---|---|---|
-| `OPENAI_API_KEY` | backend/.env | No | OpenAI GPT-4o-mini for AI hints |
-| `GROQ_API_KEY` | backend/.env | No | Groq (free) — alternative to OpenAI |
-| `OPENROUTER_API_KEY` | backend/.env | No | OpenRouter — 100+ models, free tier |
-| `OPENROUTER_MODEL` | backend/.env | No | OpenRouter model (default: llama-3.1-8b:free) |
+| `GROQ_API_KEY` | backend/.env | No | Groq (free) for AI Context-Aware Copilot |
 | `VITE_API_BASE_URL` | Vercel settings | No | Points frontend to Render backend |
 | `PORT` | Render | No | Default 3001 |
 | `NODE_ENV` | Render | Yes | Set to `production` |

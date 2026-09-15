@@ -21,10 +21,8 @@ fi
 if [ -f "backend/.env" ] || [ -f "backend/.env.example" ]; then
   if [ ! -f "backend/.env" ]; then
     cp backend/.env.example backend/.env
-    echo "📝 Created backend/.env — add one of:"
-    echo "   OPENAI_API_KEY=sk-...          (OpenAI)"
+    echo "📝 Created backend/.env — add your API key:"
     echo "   GROQ_API_KEY=gsk_...           (Groq — free)"
-    echo "   OPENROUTER_API_KEY=sk-or-v1-.. (OpenRouter — free tier)"
   fi
   echo "🔧 Starting backend..."
   cd backend && npm install --silent && npm run dev &
