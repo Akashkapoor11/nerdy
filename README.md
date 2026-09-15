@@ -47,9 +47,10 @@ After every answer, the engine updates using the standard BKT update equations:
 │  └── localStorage for session persistence               │
 ├─────────────────────────────────────────────────────────┤
 │  Backend (Node.js/Express)                              │
+│  ├── Auth & Cloud Sync (bcryptjs + JWT-ready)           │
 │  ├── AI routes → Groq (qwen/qwen3.8-27b)                │
 │  ├── Fallback: OpenRouter / OpenAI (priority order)     │
-│  └── SQLite (node:sqlite) for cross-session persistence │
+│  └── SQLite (node:sqlite) for cloud cross-session save  │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -94,8 +95,10 @@ Open **http://localhost:5173** → click **⚡ Try Demo Instantly** to see all f
 - **Gamification**: XP, levels, streaks, confetti for high scores
 - **Skill radar chart + heatmap**: Visual mastery dashboard
 - **Session history chart**: Accuracy trend over time
-- **Progress export**: JSON report for teachers/parents
-- **Switch Player**: Multiple students on same device
+- **Cloud Sync & Auth**: Secure Login/Registration with `bcryptjs` password hashing
+- **Play Anywhere**: Progress is automatically synced to the cloud via SQLite
+- **Frictionless Hackathon Deployment**: Dynamic CORS automatically accepts any frontend origin
+- **Switch Player**: Multiple students can log into their accounts on the same device
 
 ---
 
@@ -134,3 +137,4 @@ cd frontend && npx vercel --prod
 - Build: `cd backend && npm install`
 - Start: `node src/app.js`
 - Env: `GROQ_API_KEY`, `NODE_ENV=production`
+- *Note: Backend uses dynamic `origin: true` CORS, so it automatically supports any frontend URL without extra configuration!*
