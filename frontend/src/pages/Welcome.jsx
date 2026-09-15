@@ -24,6 +24,7 @@ const STEP_ORDER = ['name', 'grade', 'avatar'];
 
 export default function Welcome() {
   const navigate = useNavigate();
+  const { profile, createProfile, resetProfile } = useGameStore();
   const [step, setStep]         = useState(profile ? 'returning' : 'auth'); // auth, name, grade, avatar, login
   const [authMode, setAuthMode] = useState('register'); // register or login
   const [username, setUsername] = useState('');
