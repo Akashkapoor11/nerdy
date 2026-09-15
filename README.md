@@ -109,9 +109,9 @@ mathquest/
 ├── backend/
 │   ├── src/
 │   │   ├── routes/         # ai.js, game.js, progress.js, auth.js
-│   │   ├── services/       # ai.js (OpenRouter/Groq/OpenAI)
+│   │   ├── services/       # ai.js (Groq Copilot Integration)
 │   │   └── app.js          # Express server
-│   └── .env                # OPENROUTER_API_KEY
+│   └── .env                # GROQ_API_KEY
 └── README.md
 ```
 
@@ -128,4 +128,4 @@ cd frontend && npx vercel --prod
 ### Backend → Render
 - Build: `cd backend && npm install`
 - Start: `node src/app.js`
-- Env: `OPENROUTER_API_KEY`, `NODE_ENV=production`
+- Env: `GROQ_API_KEY`, `NODE_ENV=production`
