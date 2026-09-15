@@ -1,34 +1,34 @@
-# MathQuest ✨ — AI-Adaptive Math Learning for K-5
+# MathQuest - AI-Adaptive Math Learning for K-5
 
 > **Built for the Nerdy AI Hackathon Challenge** · Prompt 01: K–5 Math Game  
 > **Tech:** React · Node.js · BKT Adaptive Engine · Groq AI
 
 ---
 
-## 🎯 What It Is
+##  What It Is
 
 MathQuest is an AI-powered gamified math learning platform for **Kindergarten to Grade 5 students** (ages 5–11). It combines a **Bayesian Knowledge Tracing (BKT)** adaptive engine with a **Context-Aware AI Copilot (Max)** powered by Groq (Qwen 3.8B), delivering genuine personalised tutoring — not just flashcards.
 
-**⚡ [Try Demo Instantly](http://localhost:5173)** — click "⚡ Try Demo Instantly" on the welcome screen.
+** [Try Demo Instantly](http://localhost:5173)** — click "⚡ Try Demo Instantly" on the welcome screen.
 
 ---
 
-## 🤖 AI Integration Points
+##  AI Integration Points
 
 | Feature | When | What happens |
 |---|---|---|
-| 💬 **Context-Aware Copilot (Max)** | Always (floating panel) | Max reads the student's screen (Score, Question, UI Options) and provides Socratic hints without revealing answers. Features full Chat Memory. |
-| 📖 **Procedural Word Problems** | Every question | AI wraps arithmetic in a story ("Emma has 3 apples...") |
-| 💡 **AI Hints** | Before answering | Guided hint perfectly targeted to the child's grade level |
-| ✨ **AI Explanations** | After wrong answers | Max explains why the answer is correct |
-| 🎉 **Session Summaries** | Results page | Personalised encouragement based on accuracy and weak topics |
-| 🧠 **Dashboard Insights** | Dashboard | AI study recommendation from the student's mastery matrix |
+|  **Context-Aware Copilot (Max)** | Always (floating panel) | Max reads the student's screen (Score, Question, UI Options) and provides Socratic hints without revealing answers. Features full Chat Memory. |
+|  **Procedural Word Problems** | Every question | AI wraps arithmetic in a story ("Emma has 3 apples...") |
+|  **AI Hints** | Before answering | Guided hint perfectly targeted to the child's grade level |
+|  **AI Explanations** | After wrong answers | Max explains why the answer is correct |
+|  **Session Summaries** | Results page | Personalised encouragement based on accuracy and weak topics |
+|  **Dashboard Insights** | Dashboard | AI study recommendation from the student's mastery matrix |
 
 > **Zero-Downtime Architecture:** AI falls back gracefully to secondary models (OpenRouter) or built-in responses if the primary Groq backend is offline — the core learning experience never breaks.
 
 ---
 
-## 🧠 Adaptive Engine — How BKT Works
+##  Adaptive Engine - How BKT Works
 
 Each student has a **hidden mastery probability P(mastery)** for every skill (8 topics × 5 difficulty levels × 6 grade levels = 240 skill nodes).
 
@@ -39,7 +39,7 @@ After every answer, the engine updates using the standard BKT update equations:
 
 ---
 
-## 🏗️ Architecture
+##  Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -62,7 +62,7 @@ After every answer, the engine updates using the standard BKT update equations:
 
 ---
 
-## 🚀 Running Locally
+##  Running Locally
 
 ```bash
 # 1. Backend
@@ -77,7 +77,7 @@ npm install
 npm run dev                   # Starts on http://localhost:5173
 ```
 
-Open **http://localhost:5173** → click **⚡ Try Demo Instantly** to see all features immediately.
+Open **http://localhost:5173** → click ** Try Demo Instantly** to see all features immediately.
 
 ### Get a free API key
 1. Go to https://openrouter.ai
@@ -86,7 +86,7 @@ Open **http://localhost:5173** → click **⚡ Try Demo Instantly** to see all f
 
 ---
 
-## 🎮 Features
+##  Features
 
 - **Grade-gated curriculum**: Kindergarten–Grade 5, topics unlock by grade
 - **Visual aids**: Dot arrays, number lines, fraction bars for young learners
@@ -99,7 +99,7 @@ Open **http://localhost:5173** → click **⚡ Try Demo Instantly** to see all f
 
 ---
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 mathquest/
@@ -122,7 +122,7 @@ mathquest/
 
 ---
 
-## 🌐 Deployment
+##  Deployment
 
 ### Frontend → Vercel
 ```bash
@@ -134,8 +134,3 @@ cd frontend && npx vercel --prod
 - Build: `cd backend && npm install`
 - Start: `node src/app.js`
 - Env: `OPENROUTER_API_KEY`, `NODE_ENV=production`
-
----
-
-## 📜 License
-MIT · Built with ❤️ for the Nerdy Hackathon 2026
