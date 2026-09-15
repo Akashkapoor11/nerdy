@@ -75,9 +75,9 @@ npm run dev                   # Starts on http://localhost:5173
 Open **http://localhost:5173** → click ** Try Demo Instantly** to see all features immediately.
 
 ### Get a free API key
-1. Go to https://openrouter.ai
+1. Go to https://console.groq.com
 2. Sign up → API Keys → Create key
-3. Paste in `backend/.env` as `OPENROUTER_API_KEY=sk-or-...`
+3. Paste in `backend/.env` as `GROQ_API_KEY=gsk_...`
 
 ---
 
