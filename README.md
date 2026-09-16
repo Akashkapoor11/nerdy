@@ -7,7 +7,7 @@ MathQuest is an AI-powered gamified math learning platform for **Kindergarten to
 ** [Try Demo Instantly](http://localhost:5173)** - click " Try Demo Instantly" on the welcome screen.
 
 ## Deployment link- 
-https://frontend-kappa-nine-ycc7kdmdbg.vercel.app/
+[https://frontend-kappa-nine-ycc7kdmdbg.vercel.app/](https://frontend-git-main-akashkapoor12004-gmailcoms-projects.vercel.app/game)
 
 ---
 
