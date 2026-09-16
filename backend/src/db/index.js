@@ -58,7 +58,7 @@ export const skillQueries = {
     INSERT INTO skill_states (user_id, topic, difficulty, p_know, attempts, correct, streak, last_seen)
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     ON CONFLICT(user_id, topic, difficulty) DO UPDATE SET
-      p_know = $4, attempts = $5, correct = $6, streak = $7, last_seen = $8
+      p_know = EXCLUDED.p_know, attempts = EXCLUDED.attempts, correct = EXCLUDED.correct, streak = EXCLUDED.streak, last_seen = EXCLUDED.last_seen
   `, [s.user_id, s.topic, s.difficulty, s.p_know, s.attempts, s.correct, s.streak, s.last_seen]),
 };
 

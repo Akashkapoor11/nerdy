@@ -65,7 +65,7 @@ router.post('/register', async (req, res) => {
     res.status(201).json({ user, token: id });
   } catch (err) {
     console.error('Registration error:', err);
-    res.status(500).json({ error: 'Failed to create profile' });
+    res.status(500).json({ error: 'Failed to create profile: ' + err.message });
   }
 });
 
