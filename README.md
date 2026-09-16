@@ -50,14 +50,14 @@ After every answer, the engine updates using the standard BKT update equations:
 │  ├── Auth & Cloud Sync (bcryptjs + JWT-ready)           │
 │  ├── AI routes → Groq (qwen/qwen3.8-27b)                │
 │  ├── Fallback: OpenRouter / OpenAI (priority order)     │
-│  └── SQLite (node:sqlite) for cloud cross-session save  │
+│  └── PostgreSQL (pg) for permanent cloud storage        │
 └─────────────────────────────────────────────────────────┘
 ```
 
 **Stack:**
-- Frontend: React 18, Zustand, Framer Motion, Recharts, canvas-confetti
-- Backend: Node.js, Express, node:sqlite, dotenv, express-rate-limit
-- AI: Groq API (`qwen/qwen3.8-27b`) with advanced prompt-engineering for Vision-Bypass context injection.
+- **Frontend**: React 18, Zustand, Framer Motion, Recharts, canvas-confetti
+- **Backend**: Node.js, Express, pg (PostgreSQL), dotenv, express-rate-limit
+- **AI**: Groq API (`qwen/qwen3.8-27b`) with advanced prompt-engineering for Vision-Bypass context injection.
 
 ---
 
@@ -66,7 +66,7 @@ After every answer, the engine updates using the standard BKT update equations:
 ```bash
 # 1. Backend
 cd backend
-cp .env.example .env          # Add your GROQ_API_KEY
+cp .env.example .env          # Add your GROQ_API_KEY and DATABASE_URL
 npm install
 npm run dev                   # Starts on http://localhost:3001 (auto-reloads)
 
@@ -96,7 +96,7 @@ Open **http://localhost:5173** → click **⚡ Try Demo Instantly** to see all f
 - **Skill radar chart + heatmap**: Visual mastery dashboard
 - **Session history chart**: Accuracy trend over time
 - **Cloud Sync & Auth**: Secure Login/Registration with `bcryptjs` password hashing
-- **Play Anywhere**: Progress is automatically synced to the cloud via SQLite
+- **Permanent Cloud Storage**: Progress is permanently synced via a PostgreSQL database hosted on Render
 - **Frictionless Hackathon Deployment**: Dynamic CORS automatically accepts any frontend origin
 - **Switch Player**: Multiple students can log into their accounts on the same device
 
@@ -116,10 +116,11 @@ mathquest/
 │   └── vite.config.js      # Proxy: /api → localhost:3001
 ├── backend/
 │   ├── src/
-│   │   ├── routes/         # ai.js, game.js, progress.js, auth.js
+│   │   ├── routes/         # ai.js, progress.js, auth.js
 │   │   ├── services/       # ai.js (Groq Copilot Integration)
+│   │   ├── db/             # PostgreSQL connection pool and schema
 │   │   └── app.js          # Express server
-│   └── .env                # GROQ_API_KEY
+│   └── .env                # GROQ_API_KEY, DATABASE_URL
 └── README.md
 ```
 
@@ -130,11 +131,11 @@ mathquest/
 ### Frontend → Vercel
 ```bash
 cd frontend && npx vercel --prod
-# Set env: VITE_API_BASE_URL=https://your-backend.onrender.com/api
+# Set env: VITE_API_BASE_URL=https://nerdy-4jqm.onrender.com/api
 ```
 
 ### Backend → Render
 - Build: `cd backend && npm install`
 - Start: `node src/app.js`
-- Env: `GROQ_API_KEY`, `NODE_ENV=production`
+- Env: `GROQ_API_KEY`, `DATABASE_URL`, `NODE_ENV=production`
 - *Note: Backend uses dynamic `origin: true` CORS, so it automatically supports any frontend URL without extra configuration!*
