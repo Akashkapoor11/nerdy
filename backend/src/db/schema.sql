@@ -16,11 +16,11 @@ CREATE TABLE IF NOT EXISTS users (
   total_correct INTEGER DEFAULT 0,
   topics_ever_attempted TEXT DEFAULT '[]',
   last_played_at TEXT,
-  created_at TEXT DEFAULT (datetime('now'))
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS skill_states (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  id SERIAL PRIMARY KEY,
   user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   topic TEXT NOT NULL,
   difficulty INTEGER NOT NULL CHECK(difficulty BETWEEN 1 AND 5),
@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS skill_states (
 CREATE TABLE IF NOT EXISTS sessions (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  started_at TEXT DEFAULT (datetime('now')),
+  started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   ended_at TEXT,
   questions_answered INTEGER DEFAULT 0,
   correct_count INTEGER DEFAULT 0,
@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS sessions (
 );
 
 CREATE TABLE IF NOT EXISTS answers (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  id SERIAL PRIMARY KEY,
   session_id TEXT NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
   user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   topic TEXT NOT NULL,
@@ -58,15 +58,15 @@ CREATE TABLE IF NOT EXISTS answers (
   time_taken_ms INTEGER,
   hint_used INTEGER DEFAULT 0,
   misconception TEXT,
-  answered_at TEXT DEFAULT (datetime('now'))
+  answered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS badges (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  id SERIAL PRIMARY KEY,
   user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   badge_id TEXT NOT NULL,
   badge_name TEXT NOT NULL,
-  earned_at TEXT DEFAULT (datetime('now')),
+  earned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   UNIQUE(user_id, badge_id)
 );
 

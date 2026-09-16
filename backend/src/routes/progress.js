@@ -1,28 +1,31 @@
 import { Router } from 'express';
-import db, { userQueries, skillQueries, sessionQueries, answerQueries, badgeQueries } from '../db/index.js';
+import { userQueries, skillQueries, sessionQueries, answerQueries, badgeQueries, getClient } from '../db/index.js';
 import { rowsToSkillState, getTopicMastery, getWeakSkills, TOPICS } from '../services/adaptive.js';
 import { computeLevel, BADGE_DEFINITIONS } from '../services/badges.js';
 
 const router = Router();
 
 // Sync local progress to backend
-router.post('/sync', (req, res) => {
+router.post('/sync', async (req, res) => {
   try {
     const { userId, skillState, sessions } = req.body;
     if (!userId) return res.status(400).json({ error: 'userId required' });
 
     // Ensure the user exists
-    const user = userQueries.findById.get(userId);
+    const user = await userQueries.findById(userId);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
-    db.transaction(() => {
+    const client = await getClient();
+    try {
+      await client.query('BEGIN');
+      
       // 1. Sync skill state
       if (skillState) {
         for (const key of Object.keys(skillState)) {
           const [topic, diffStr] = key.split('_');
           const difficulty = parseInt(diffStr, 10);
           const skill = skillState[key];
-          skillQueries.upsert.run({
+          await skillQueries.upsert({
             user_id: userId,
             topic,
             difficulty,
@@ -31,32 +34,39 @@ router.post('/sync', (req, res) => {
             correct: skill.correct,
             streak: skill.streak,
             last_seen: skill.last_seen || null
-          });
+          }, client);
         }
       }
 
       // 2. Sync sessions (only insert ones that don't exist)
       if (sessions && sessions.length > 0) {
         for (const session of sessions) {
-          const existing = sessionQueries.getById.get(session.id);
+          const existing = await sessionQueries.getById(session.id, client);
           if (!existing) {
-            sessionQueries.create.run({
+            await sessionQueries.create({
               id: session.id,
               user_id: userId,
               started_at: new Date(session.startedAt).toISOString()
-            });
-            sessionQueries.end.run({
+            }, client);
+            await sessionQueries.end({
               id: session.id,
               ended_at: session.endedAt ? new Date(session.endedAt).toISOString() : new Date().toISOString(),
               questions_answered: session.total || 0,
               correct_count: session.correct || 0,
               xp_earned: session.xpEarned || 0,
               topics_covered: JSON.stringify(session.topicsCovered || [])
-            });
+            }, client);
           }
         }
       }
-    })();
+      
+      await client.query('COMMIT');
+    } catch (e) {
+      await client.query('ROLLBACK');
+      throw e;
+    } finally {
+      client.release();
+    }
 
     res.json({ success: true });
   } catch (err) {
@@ -66,22 +76,22 @@ router.post('/sync', (req, res) => {
 });
 
 // Full dashboard data for a user
-router.get('/dashboard/:userId', (req, res) => {
+router.get('/dashboard/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
-    const user = userQueries.findById.get(userId);
+    const user = await userQueries.findById(userId);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
-    const skillRows = skillQueries.getAll.all(userId);
+    const skillRows = await skillQueries.getAll(userId);
     const skillState = rowsToSkillState(skillRows);
     const topicMastery = getTopicMastery(skillState, user.grade);
     const weakSkills = getWeakSkills(skillState, user.grade);
-    const recentSessions = sessionQueries.getRecent.all(userId);
-    const badges = badgeQueries.getAll.all(userId);
+    const recentSessions = await sessionQueries.getRecent(userId);
+    const badges = await badgeQueries.getAll(userId);
     const levelInfo = computeLevel(user.xp);
 
     // Topic stats from answers
-    const topicStats = answerQueries.getStats.all(userId);
+    const topicStats = await answerQueries.getStats(userId);
     const topicStatsMap = {};
     for (const s of topicStats) {
       topicStatsMap[s.topic] = {
@@ -105,7 +115,7 @@ router.get('/dashboard/:userId', (req, res) => {
 
     // Session history chart data
     const sessionChart = recentSessions.slice(0, 7).reverse().map(s => ({
-      date: s.started_at?.split('T')[0],
+      date: s.started_at?.toISOString ? s.started_at.toISOString().split('T')[0] : s.started_at?.split('T')[0],
       correct: s.correct_count || 0,
       total: s.questions_answered || 0,
       accuracy: s.questions_answered > 0 ? Math.round((s.correct_count / s.questions_answered) * 100) : 0,
@@ -139,15 +149,15 @@ router.get('/dashboard/:userId', (req, res) => {
 });
 
 // Skill detail for a specific topic
-router.get('/skill/:userId/:topic', (req, res) => {
+router.get('/skill/:userId/:topic', async (req, res) => {
   try {
     const { userId, topic } = req.params;
-    const user = userQueries.findById.get(userId);
+    const user = await userQueries.findById(userId);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
-    const skillRows = skillQueries.getAll.all(userId);
+    const skillRows = await skillQueries.getAll(userId);
     const topicSkills = skillRows.filter(r => r.topic === topic);
-    const recentAnswers = answerQueries.getRecentByTopic.all(userId, topic);
+    const recentAnswers = await answerQueries.getRecentByTopic(userId, topic);
 
     res.json({ topic, topicInfo: TOPICS[topic], skills: topicSkills, recentAnswers });
   } catch (err) {

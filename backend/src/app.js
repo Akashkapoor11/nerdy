@@ -4,7 +4,6 @@ import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 
 import authRoutes from './routes/auth.js';
-import gameRoutes from './routes/game.js';
 import progressRoutes from './routes/progress.js';
 import aiRoutes from './routes/ai.js';
 
@@ -29,7 +28,6 @@ app.use('/api', apiLimiter);
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.use('/api/auth', authRoutes);
-app.use('/api/game', gameRoutes);
 app.use('/api/progress', progressRoutes);
 app.use('/api/ai', aiRoutes);
 
@@ -71,20 +69,27 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500).json({ error: err.message || 'Internal server error' });
 });
 
+import { initDb } from './db/index.js';
+
 // ─── Start ────────────────────────────────────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`\n🚀 MathQuest API running at http://localhost:${PORT}`);
-  const aiStatus = process.env.NVIDIA_API_KEY
-    ? '✅ NVIDIA NIM Connected (meta/llama-3.1-8b-instruct)'
-    : process.env.OPENAI_API_KEY
-      ? '✅ OpenAI Connected (gpt-4o-mini)'
-      : process.env.GROQ_API_KEY
-        ? '✅ Groq Connected (qwen/qwen3.8-27b) — FREE'
-        : process.env.OPENROUTER_API_KEY
-          ? `✅ OpenRouter Connected (${process.env.OPENROUTER_MODEL || 'deepseek/deepseek-r1:free'})`
-          : '⚠️  Not configured (AI hints disabled)';
-  console.log(`🔑 AI: ${aiStatus}`);
-  console.log(`📊 Mode: ${process.env.NODE_ENV || 'development'}\n`);
+initDb().then(() => {
+  app.listen(PORT, () => {
+    console.log(`\n🚀 MathQuest API running at http://localhost:${PORT}`);
+    const aiStatus = process.env.NVIDIA_API_KEY
+      ? '✅ NVIDIA NIM Connected (meta/llama-3.1-8b-instruct)'
+      : process.env.OPENAI_API_KEY
+        ? '✅ OpenAI Connected (gpt-4o-mini)'
+        : process.env.GROQ_API_KEY
+          ? '✅ Groq Connected (qwen/qwen3.8-27b) — FREE'
+          : process.env.OPENROUTER_API_KEY
+            ? `✅ OpenRouter Connected (${process.env.OPENROUTER_MODEL || 'deepseek/deepseek-r1:free'})`
+            : '⚠️  Not configured (AI hints disabled)';
+    console.log(`🔑 AI: ${aiStatus}`);
+    console.log(`📊 Mode: ${process.env.NODE_ENV || 'development'}\n`);
+  });
+}).catch(err => {
+  console.error('Failed to initialize database:', err);
+  process.exit(1);
 });
 
 export default app;

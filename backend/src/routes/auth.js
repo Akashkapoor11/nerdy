@@ -1,11 +1,10 @@
 import { Router } from 'express';
 import { v4 as uuid } from 'uuid';
-import db, { userQueries, skillQueries } from '../db/index.js';
+import db, { userQueries, skillQueries, getClient } from '../db/index.js';
 import { getTopicsForGrade } from '../services/adaptive.js';
+import bcrypt from 'bcryptjs';
 
 const router = Router();
-
-import bcrypt from 'bcryptjs';
 
 router.post('/register', async (req, res) => {
   try {
@@ -24,7 +23,7 @@ router.post('/register', async (req, res) => {
     }
 
     // Check if username exists
-    const existing = userQueries.findByUsername.get(username);
+    const existing = await userQueries.findByUsername(username);
     if (existing) {
       return res.status(400).json({ error: 'Username already taken' });
     }
@@ -33,28 +32,35 @@ router.post('/register', async (req, res) => {
     const id = uuid();
     const now = new Date().toISOString();
 
-    userQueries.create.run({ 
-      id, 
-      username: username.trim().toLowerCase(), 
-      password_hash, 
-      name: name.trim(), 
-      grade: gradeInt, 
-      avatar, 
-      last_played_at: now 
-    });
+    const client = await getClient();
+    try {
+      await client.query('BEGIN');
+      await userQueries.create({ 
+        id, 
+        username: username.trim().toLowerCase(), 
+        password_hash, 
+        name: name.trim(), 
+        grade: gradeInt, 
+        avatar, 
+        last_played_at: now 
+      }, client);
 
-    // Initialise all skill nodes for this grade
-    const topics = getTopicsForGrade(gradeInt);
-    const initSkills = db.transaction(() => {
+      // Initialise all skill nodes for this grade
+      const topics = getTopicsForGrade(gradeInt);
       for (const topic of topics) {
         for (let d = 1; d <= 5; d++) {
-          skillQueries.upsert.run({ user_id:id, topic, difficulty:d, p_know:0.1, attempts:0, correct:0, streak:0, last_seen:null });
+          await skillQueries.upsert({ user_id: id, topic, difficulty: d, p_know: 0.1, attempts: 0, correct: 0, streak: 0, last_seen: null }, client);
         }
       }
-    });
-    initSkills();
+      await client.query('COMMIT');
+    } catch (e) {
+      await client.query('ROLLBACK');
+      throw e;
+    } finally {
+      client.release();
+    }
 
-    const user = userQueries.findById.get(id);
+    const user = await userQueries.findById(id);
     delete user.password_hash;
     res.status(201).json({ user, token: id });
   } catch (err) {
@@ -70,7 +76,7 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ error: 'username and password are required' });
     }
 
-    const user = userQueries.findByUsername.get(username.trim().toLowerCase());
+    const user = await userQueries.findByUsername(username.trim().toLowerCase());
     if (!user) {
       return res.status(401).json({ error: 'Invalid username or password' });
     }
@@ -88,14 +94,14 @@ router.post('/login', async (req, res) => {
   }
 });
 
-router.get('/profile/:id', (req, res) => {
-  const user = userQueries.findById.get(req.params.id);
+router.get('/profile/:id', async (req, res) => {
+  const user = await userQueries.findById(req.params.id);
   if (!user) return res.status(404).json({ error: 'Profile not found' });
   res.json({ user });
 });
 
-router.get('/profiles', (req, res) => {
-  const users = userQueries.list.all();
+router.get('/profiles', async (req, res) => {
+  const users = await userQueries.list();
   res.json({ users });
 });
 
