@@ -63,7 +63,12 @@ export default function Welcome() {
     if (res.success) {
       navigate('/game');
     } else {
-      setError(res.error);
+      if (res.error.toLowerCase().includes('already taken')) {
+        setError('You already have an account! Please sign in below.');
+        setAuthMode('login');
+      } else {
+        setError(res.error);
+      }
       setStep('auth');
     }
   };
