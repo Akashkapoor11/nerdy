@@ -34,7 +34,7 @@ app.use('/api/progress', progressRoutes);
 app.use('/api/ai', aiRoutes);
 
 // Health check
-app.get(['/health', '/api/health'], (req, res) => {
+app.get(['/', '/health', '/api/health'], (req, res) => {
   const aiProvider = process.env.NVIDIA_API_KEY
     ? 'nvidia'
     : process.env.OPENAI_API_KEY
